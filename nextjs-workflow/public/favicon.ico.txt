@@ -1,0 +1,2 @@
+// Simple placeholder for favicon - Next.js will generate this automatically
+// You can replace this with your own favicon.ico file later

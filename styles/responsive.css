@@ -1,0 +1,540 @@
+/* ========================================
+   RESPONSIVE DESIGN STYLES
+   Binance Futures Trading Bot
+   Mobile-First Approach
+   ======================================== */
+
+/* Large Desktop (1600px+) */
+@media (min-width: 1600px) {
+  .app {
+    max-width: 1800px;
+  }
+  
+  .main-content {
+    grid-template-columns: 320px 1fr 360px;
+    gap: var(--space-xl);
+  }
+  
+  .strategy-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Desktop (1024px - 1599px) */
+@media (max-width: 1599px) {
+  .app {
+    max-width: 1400px;
+  }
+}
+
+/* Desktop (769px - 1024px) */
+@media (max-width: 1024px) {
+  .main-content {
+    grid-template-columns: 260px 1fr 300px;
+    gap: var(--space-md);
+    padding: var(--space-md);
+  }
+  
+  .sidebar-left h3,
+  .sidebar-right h3,
+  .center-content h2,
+  .center-content h3 {
+    font-size: 18px;
+  }
+  
+  .strategy-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .metric-value {
+    font-size: 20px;
+  }
+}
+
+/* Tablet (768px and below) */
+@media (max-width: 768px) {
+  .main-content {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    padding-bottom: 120px; /* Space for mobile nav */
+  }
+  
+  .sidebar-left,
+  .sidebar-right {
+    order: 2;
+  }
+  
+  .center-content {
+    order: 1;
+  }
+  
+  /* Stack sidebar content */
+  .sidebar-left > div,
+  .sidebar-right > div {
+    margin-bottom: var(--space-sm);
+  }
+  
+  .strategy-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+  
+  .strategy-card {
+    padding: var(--space-sm);
+  }
+  
+  /* Compact header for mobile */
+  .header {
+    padding: var(--space-sm) var(--space-md);
+  }
+  
+  .header-content {
+    flex-direction: column;
+    gap: var(--space-sm);
+    align-items: stretch;
+  }
+  
+  .logo-section h1 {
+    font-size: 24px;
+    text-align: center;
+  }
+  
+  .header-controls {
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .mode-toggle {
+    order: 2;
+  }
+  
+  .emergency-stop {
+    order: 1;
+  }
+  
+  /* Mobile navigation bar */
+  .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--bg-surface-1);
+    border-top: 1px solid var(--border-default);
+    padding: var(--space-sm) 0;
+    padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
+    z-index: 100;
+    display: block;
+  }
+  
+  .mobile-nav-items {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+  }
+  
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    transition: var(--transition-fast);
+    border-radius: var(--radius-sm);
+  }
+  
+  .mobile-nav-item:hover,
+  .mobile-nav-item.active {
+    color: var(--accent-500);
+    background-color: rgba(252, 213, 53, 0.1);
+  }
+  
+  .mobile-nav-icon {
+    font-size: 20px;
+  }
+  
+  /* Hide desktop navigation items on mobile */
+  .desktop-nav {
+    display: none;
+  }
+  
+  /* Mobile-optimized tables */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .trades-table {
+    min-width: 600px;
+  }
+  
+  .trades-table th,
+  .trades-table td {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 12px;
+  }
+  
+  /* Mobile-optimized forms */
+  .form-input,
+  .form-select {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  .btn {
+    min-height: 44px; /* Touch-friendly */
+    padding: var(--space-sm) var(--space-md);
+  }
+  
+  .btn-sm {
+    min-height: 36px;
+    padding: var(--space-xs) var(--space-sm);
+  }
+  
+  /* Mobile modal adjustments */
+  .modal-content {
+    width: 95%;
+    max-height: 90vh;
+    margin: var(--space-sm);
+  }
+  
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: var(--space-sm);
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+  
+  .modal-footer .btn {
+    width: 100%;
+  }
+}
+
+/* Mobile Portrait (480px and below) */
+@media (max-width: 480px) {
+  .header {
+    padding: var(--space-xs) var(--space-sm);
+  }
+  
+  .logo-section h1 {
+    font-size: 20px;
+  }
+  
+  .header-controls {
+    gap: var(--space-sm);
+  }
+  
+  .emergency-stop {
+    font-size: 12px;
+    padding: var(--space-xs) var(--space-sm);
+  }
+  
+  .emergency-stop .icon {
+    font-size: 14px;
+  }
+  
+  .main-content {
+    padding: var(--space-xs);
+  }
+  
+  .sidebar-left > div,
+  .sidebar-right > div,
+  .center-content > div {
+    padding: var(--space-sm);
+  }
+  
+  .metric-value {
+    font-size: 18px;
+  }
+  
+  .trades-table th,
+  .trades-table td {
+    padding: 2px var(--space-xs);
+    font-size: 11px;
+  }
+  
+  /* Stack control groups on mobile */
+  .control-group {
+    flex-direction: column;
+  }
+  
+  .control-group .btn {
+    width: 100%;
+  }
+  
+  /* Hide less important columns on small screens */
+  .trades-table .hide-mobile {
+    display: none;
+  }
+}
+
+/* Small Mobile (360px and below) */
+@media (max-width: 360px) {
+  .logo-section h1 {
+    font-size: 18px;
+  }
+  
+  .header-controls {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+  
+  .mode-toggle {
+    order: 1;
+  }
+  
+  .toggle-label {
+    font-size: 12px;
+  }
+  
+  .toggle-switch {
+    width: 36px;
+    height: 20px;
+  }
+  
+  .toggle-slider:before {
+    height: 14px;
+    width: 14px;
+  }
+  
+  input:checked + .toggle-slider:before {
+    transform: translateX(16px);
+  }
+  
+  .emergency-stop {
+    font-size: 11px;
+    padding: 2px var(--space-xs);
+  }
+  
+  .metric-value {
+    font-size: 16px;
+  }
+  
+  .strategy-card h4 {
+    font-size: 16px;
+  }
+  
+  .stat {
+    font-size: 12px;
+  }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .loading-spinner {
+    border-width: 2px;
+  }
+  
+  .status-indicator {
+    border-width: 1px;
+  }
+}
+
+/* Landscape Mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .main-content {
+    grid-template-columns: 1fr 300px;
+    padding-top: var(--space-sm);
+  }
+  
+  .sidebar-right {
+    order: 2;
+  }
+  
+  .sidebar-left {
+    order: 3;
+  }
+  
+  .header {
+    position: static;
+  }
+  
+  .mobile-nav {
+    display: none; /* Hide bottom nav in landscape */
+  }
+  
+  .main-content {
+    padding-bottom: var(--space-sm);
+  }
+}
+
+/* Print Styles */
+@media print {
+  .header,
+  .sidebar-left,
+  .sidebar-right,
+  .btn,
+  .modal,
+  .mobile-nav {
+    display: none !important;
+  }
+  
+  .main-content {
+    grid-template-columns: 1fr !important;
+    padding: 0 !important;
+  }
+  
+  .strategy-card,
+  .metric-card,
+  .position-item {
+    break-inside: avoid;
+    margin-bottom: var(--space-md);
+  }
+  
+  .trades-table {
+    font-size: 10px;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .app {
+    max-width: none !important;
+  }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .loading-spinner {
+    animation: none;
+  }
+  
+  .status-indicator {
+    animation: none;
+  }
+}
+
+/* Dark Mode Support (if needed) */
+@media (prefers-color-scheme: dark) {
+  /* Our design is already dark, but we can add enhancements */
+  .trades-table tbody tr:hover {
+    background-color: rgba(252, 213, 53, 0.05);
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  :root {
+    --border-default: #666666;
+    --text-secondary: #CCCCCC;
+  }
+  
+  .btn-secondary {
+    border-width: 2px;
+  }
+  
+  .form-input,
+  .form-select {
+    border-width: 2px;
+  }
+}
+
+/* Focus Management for Keyboard Navigation */
+@media (max-width: 768px) {
+  .btn:focus,
+  .form-input:focus,
+  .form-select:focus,
+  .modal:focus {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 3px var(--accent-500);
+  }
+}
+
+/* Swipe Gestures Support */
+@media (max-width: 768px) {
+  .main-content {
+    touch-action: pan-x;
+  }
+  
+  .center-content {
+    touch-action: pan-y;
+  }
+}
+
+/* Container Queries Support (Future) */
+@supports (container-type: inline-size) {
+  .strategy-grid {
+    container-type: inline-size;
+  }
+  
+  @container (max-width: 400px) {
+    .strategy-card {
+      padding: var(--space-sm);
+    }
+  }
+}
+
+/* Container Queries for Strategy Cards */
+.strategy-card {
+  container-type: inline-size;
+}
+
+@container (max-width: 300px) {
+  .strategy-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}
+
+/* Additional Mobile Optimizations */
+@media (max-width: 768px) {
+  /* Improve touch targets */
+  .toggle-switch {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Optimize scroll performance */
+  .positions-list,
+  .trades-table tbody {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Better modal scrolling */
+  .modal-content {
+    max-height: 95vh;
+  }
+  
+  /* Optimize chart height for mobile */
+  .price-chart {
+    min-height: 200px;
+  }
+  
+  /* Mobile-first typography */
+  .strategy-card h4 {
+    font-size: 16px;
+  }
+  
+  .metric-value {
+    font-size: 18px;
+  }
+  
+  /* Improve button spacing on mobile */
+  .btn-group {
+    flex-direction: column;
+  }
+  
+  .btn-group .btn {
+    width: 100%;
+  }
+}

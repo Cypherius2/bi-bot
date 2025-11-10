@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="theme-color" content="#1f2937">
+    <title>MNV Trading Bot - Crypto Futures Trading</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Enhanced Responsive Design */
+        :root {
+            --vh: 1vh;
+            --safe-area-inset-bottom: env(safe-area-inset-bottom, 0);
+        }
+        
+        html {
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            overflow-x: hidden;
+            height: 100vh;
+            height: calc(var(--vh, 1vh) * 100);
+            background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+        }
+        
+        /* Mobile-first optimizations */
+        @media (max-width: 768px) {
+            .mobile-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                z-index: 1000;
+                backdrop-filter: blur(10px);
+                background: rgba(31, 41, 55, 0.95);
+                border-top: 1px solid rgba(75, 85, 99, 0.3);
+                padding-bottom: var(--safe-area-inset-bottom);
+            }
+            
+            .touch-btn {
+                min-height: 44px;
+                min-width: 44px;
+                touch-action: manipulation;
+            }
+            
+            .main-content {
+                padding-bottom: 80px; /* Space for mobile nav */
+                padding-bottom: calc(80px + var(--safe-area-inset-bottom));
+            }
+            
+            /* Pull to refresh */
+            .pull-refresh {
+                transition: transform 0.3s ease;
+            }
+        }
+        
+        /* Desktop optimizations */
+        @media (min-width: 769px) {
+            .desktop-nav {
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+        }
+        
+        /* Touch-friendly interactive elements */
+        .interactive:hover {
+            transform: translateY(-1px);
+            transition: transform 0.2s ease;
+        }
+        
+        .interactive:active {
+            transform: translateY(0);
+        }
+        
+        /* Status indicators */
+        .status-online {
+            color: #10b981;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-offline {
+            color: #ef4444;
+        }
+        
+        .status-trading {
+            color: #f59e0b;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Trading card animations */
+        .trading-card {
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .trading-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Profit/Loss indicators */
+        .profit-positive {
+            color: #10b981;
+        }
+        
+        .profit-negative {
+            color: #ef4444;
+        }
+        
+        .profit-neutral {
+            color: #6b7280;
+        }
+        
+        /* Chart container */
+        .chart-container {
+            min-height: 300px;
+            position: relative;
+        }
+        
+        /* Loading states */
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Mobile-specific styles */
+        .mobile-only {
+            display: block;
+        }
+        
+        .desktop-only {
+            display: none;
+        }
+        
+        @media (min-width: 769px) {
+            .mobile-only {
+                display: none;
+            }
+            
+            .desktop-only {
+                display: block;
+            }
+        }
+        
+        /* PWA styles */
+        @media (display-mode: standalone) {
+            body {
+                padding-top: env(safe-area-inset-top);
+            }
+        }
+        
+        /* Enhanced form controls */
+        .form-control {
+            transition: all 0.2s ease;
+        }
+        
+        .form-control:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Gradient backgrounds */
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+        
+        .bg-gradient-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .bg-gradient-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .bg-gradient-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        
+        .tooltip:hover::after {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans">
+    
+    <!-- Desktop Navigation -->
+    <nav class="desktop-nav bg-gray-800 border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-blue-400">MNV Trading Bot</h1>
+                    <div class="ml-4 flex items-center">
+                        <div id="connection-indicator" class="w-2 h-2 bg-red-500 rounded-full status-offline mr-2"></div>
+                        <span id="connection-status" class="text-sm text-gray-400">Offline</span>
+                    </div>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="showSection('dashboard')" class="nav-btn text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium interactive">
+                        Dashboard
+                    </button>
+                    <button onclick="showSection('signals')" class="nav-btn text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium interactive">
+                        Signals
+                    </button>
+                    <button onclick="showSection('positions')" class="nav-btn text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium interactive">
+                        Positions
+                    </button>
+                    <button onclick="showSection('connect')" class="nav-btn text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium interactive">
+                        Connect
+                    </button>
+                    <button onclick="showSection('analytics')" class="nav-btn text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium interactive">
+                        Analytics
+                    </button>
+                    <button onclick="showSection('logs')" class="nav-btn text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium interactive">
+                        Logs
+                    </button>
+                    <button onclick="showSection('settings')" class="nav-btn text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium interactive">
+                        Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Header -->
+    <header class="mobile-only bg-gray-800 border-b border-gray-700 px-4 py-3">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center">
+                <h1 class="text-lg font-bold text-blue-400">MNV Trading Bot</h1>
+                <div class="ml-3 flex items-center">
+                    <div id="mobile-connection-indicator" class="w-2 h-2 bg-red-500 rounded-full status-offline mr-2"></div>
+                    <span id="mobile-connection-status" class="text-xs text-gray-400">Offline</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button id="notifications-btn" class="touch-btn relative p-2">
+                    <i class="fas fa-bell text-gray-400"></i>
+                    <span id="notification-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">0</span>
+                </button>
+                <button id="mobile-settings-btn" class="touch-btn p-2">
+                    <i class="fas fa-cog text-gray-400"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Pull to Refresh Header -->
+        <div id="refresh-header" class="fixed top-0 left-0 right-0 bg-gray-800 text-center py-2 z-50 transform -translate-y-full transition-transform duration-300 mobile-only">
+            <i class="fas fa-chevron-down text-blue-400"></i>
+            <span class="text-sm text-gray-300 ml-2">Pull to refresh</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="section">
+            <!-- Bot Status Card -->
+            <div class="trading-card bg-gray-800 rounded-lg shadow-xl p-6 mb-6 border border-gray-700">
+                <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-4">
+                    <div class="mb-4 lg:mb-0">
+                        <h2 class="text-2xl font-bold text-white mb-2">Bot Status</h2>
+                        <div class="flex items-center space-x-3">
+                            <span id="bot-status-badge" class="px-3 py-1 rounded-full text-sm font-semibold bg-red-600">
+                                Offline
+                            </span>
+                            <span id="trading-mode-badge" class="px-3 py-1 rounded-full text-sm font-semibold bg-gray-600">
+                                Demo
+                            </span>
+                            <span id="enhanced-features-badge" class="px-3 py-1 rounded-full text-sm font-semibold bg-blue-600">
+                                Enhanced Mode
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <button onclick="startBot()" id="start-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition touch-btn interactive">
+                            <i class="fas fa-play mr-2"></i>Start Bot
+                        </button>
+                        <button onclick="stopBot()" id="stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition touch-btn interactive">
+                            <i class="fas fa-stop mr-2"></i>Stop Bot
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Quick Controls -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Crypto Pair</label>
+                        <select id="symbol-select" class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 form-control">
+                            <option value="BTCUSDT">BTC/USDT (Bitcoin)</option>
+                            <option value="ETHUSDT">ETH/USDT (Ethereum)</option>
+                            <option value="BNBUSDT">BNB/USDT (Binance Coin)</option>
+                            <option value="ADAUSDT">ADA/USDT (Cardano)</option>
+                            <option value="XRPUSDT">XRP/USDT (Ripple)</option>
+                            <option value="SOLUSDT">SOL/USDT (Solana)</option>
+                            <option value="DOTUSDT">DOT/USDT (Polkadot)</option>
+                            <option value="DOGEUSDT">DOGE/USDT (Dogecoin)</option>
+                            <option value="AVAXUSDT">AVAX/USDT (Avalanche)</option>
+                            <option value="MATICUSDT">MATIC/USDT (Polygon)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Trading Mode</label>
+                        <select id="mode-select" class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 form-control">
+                            <option value="demo">Testnet (Paper Trading)</option>
+                            <option value="live">Mainnet (Live Trading)</option>
+                        </select>
+                    </div>
+                    <div class="mobile-only">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Quick Actions</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="executeManualTrade('buy')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded-lg text-sm transition touch-btn">
+                                <i class="fas fa-arrow-up mr-1"></i>Buy
+                            </button>
+                            <button onclick="executeManualTrade('sell')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg text-sm transition touch-btn">
+                                <i class="fas fa-arrow-down mr-1"></i>Sell
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Crypto Trading Features -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm mb-1">EMA Indicators</p>
+                                <p id="ema-indicators-status" class="text-green-400 font-semibold">Active</p>
+                            </div>
+                            <i class="fas fa-chart-line text-green-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm mb-1">Bollinger Bands</p>
+                                <p id="bb-indicators-status" class="text-blue-400 font-semibold">Monitoring</p>
+                            </div>
+                            <i class="fas fa-bars text-blue-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm mb-1">Leverage Control</p>
+                                <p id="leverage-status" class="text-yellow-400 font-semibold">Configured</p>
+                            </div>
+                            <i class="fas fa-times text-yellow-400 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm mb-1">24/7 Trading</p>
+                                <p id="trading-hours-status" class="text-purple-400 font-semibold">Always Active</p>
+                            </div>
+                            <i class="fas fa-clock text-purple-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Price Card -->
+            <div class="trading-card bg-gray-800 rounded-lg shadow-xl p-6 mb-6 border border-gray-700">
+                <h2 class="text-2xl font-bold text-white mb-4">Current Price</h2>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-gray-700 rounded-lg p-4 text-center">
+                        <p class="text-gray-400 text-sm mb-1">Bid</p>
+                        <p id="current-bid" class="text-xl font-bold profit-negative">-</p>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4 text-center">
+                        <p class="text-gray-400 text-sm mb-1">Ask</p>
+                        <p id="current-ask" class="text-xl font-bold profit-positive">-</p>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4 text-center">
+                        <p class="text-gray-400 text-sm mb-1">Spread</p>
+                        <p id="current-spread" class="text-xl font-bold text-white">-</p>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4 text-center">
+                        <p class="text-gray-400 text-sm mb-1">Change</p>
+                        <p id="current-change" class="text-xl font-bold profit-neutral">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Summary -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Account Info -->
+                <div class="trading-card bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold text-white mb-4">Account Summary</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <p class="text-gray-400 text-sm mb-1">Balance</p>
+                            <p id="account-balance" class="text-2xl font-bold text-white">$0.00</p>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <p class="text-gray-400 text-sm mb-1">Equity</p>
+                            <p id="account-equity" class="text-2xl font-bold text-white">$0.00</p>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <p class="text-gray-400 text-sm mb-1">Profit</p>
+                            <p id="account-profit" class="text-2xl font-bold profit-positive">$0.00</p>
+                        </div>
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <p class="text-gray-400 text-sm mb-1">Free Margin</p>
+                            <p id="account-margin" class="text-2xl font-bold text-white">$0.00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="trading-card bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
+                    <h3 class="text-xl font-bold text-white mb-4">Today's Performance</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Total Trades</span>
+                            <span id="today-trades" class="text-white font-semibold">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Win Rate</span>
+                            <span id="today-winrate" class="text-green-400 font-semibold">0%</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Best Trade</span>
+                            <span id="best-trade" class="text-green-400 font-semibold">$0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Momentum Signals</span>
+                            <span id="momentum-signals" class="text-purple-400 font-semibold">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connect Section -->
+        <div id="connect-section" class="section hidden">
+            <div class="trading-card bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
+                <h2 class="text-2xl font-bold text-white mb-6">Binance Futures Connection</h2>
+                
+                <div class="space-y-6">
+                    <!-- Connection Status -->
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-white mb-3">Connection Status</h3>
+                        <div class="flex items-center space-x-3">
+                            <div id="binance-connection-indicator" class="w-3 h-3 bg-red-500 rounded-full status-offline"></div>
+                            <span id="binance-connection-status" class="text-gray-300">Not Connected</span>
+                            <span id="binance-mode-indicator" class="px-2 py-1 text-xs rounded-full bg-gray-600">Testnet</span>
+                        </div>
+                    </div>
+
+                    <!-- Binance API Credentials Form -->
+                    <div class="bg-gray-700 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Binance API Configuration</h3>
+                        <form id="binance-credentials-form" onsubmit="connectToBinance(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">API Key</label>
+                                <input type="text" id="binance-api-key" placeholder="Your Binance API Key" required
+                                    class="w-full bg-gray-600 border border-gray-500 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">API Secret</label>
+                                <div class="relative">
+                                    <input type="password" id="binance-api-secret" placeholder="Your Binance API Secret" required
+                                        class="w-full bg-gray-600 border border-gray-500 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10">
+                                    <button type="button" onclick="toggleApiSecret()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300">
+                                        <i class="fas fa-eye" id="api-secret-toggle-icon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Leverage Setting</label>
+                                <select id="leverage-setting" class="w-full bg-gray-600 border border-gray-500 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="5">5x Leverage</option>
+                                    <option value="10">10x Leverage</option>
+                                    <option value="20">20x Leverage</option>
+                                    <option value="50">50x Leverage</option>
+                                    <option value="100">100x Leverage</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Network Mode</label>
+                                <select id="network-mode" class="w-full bg-gray-600 border border-gray-500 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="testnet">Testnet (Recommended for Testing)</option>
+                                    <option value="mainnet">Mainnet (Live Trading)</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" id="connect-btn" 
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors touch-btn interactive">
+                                <i class="fas fa-link mr-2"></i>Connect to Binance
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Manual Trading Pair Configuration -->
+                    <div class="bg-gray-700 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Trading Configuration</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Manual Crypto Pair</label>
+                                <input type="text" id="manual-crypto-pair" placeholder="e.g., BTCUSDT" 
+                                    class="w-full bg-gray-600 border border-gray-500 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    value="BTCUSDT">
+                                <p class="text-xs text-gray-400 mt-1">Enter any Binance futures pair (BTCUSDT, ETHUSDT, etc.)</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Position Size (%)</label>
+                                <input type="number" id="position-size" min="0.1" max="10" step="0.1" value="1.0" 
+                                    class="w-full bg-gray-600 border border-gray-500 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <p class="text-xs text-gray-400 mt-1">Risk per trade as % of account</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connection Tips -->
+                    <div class="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-blue-300 mb-3">Connection Tips</h3>
+                        <ul class="text-sm text-blue-200 space-y-2">
+                            <li><i class="fas fa-info-circle mr-2"></i>Get your API keys from Binance Account → API Management</li>
+                            <li><i class="fas fa-info-circle mr-2"></i>Enable "Futures" trading permission for your API key</li>
+                            <li><i class="fas fa-info-circle mr-2"></i>Start with Testnet to test your setup without real money</li>
+                            <li><i class="fas fa-info-circle mr-2"></i>Higher leverage = higher risk and higher potential profit</li>
+                        </ul>
+                    </div>
+
+                    <!-- Strategy Features -->
+                    <div class="bg-green-900/20 border border-green-700/50 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-green-300 mb-3">Crypto Trading Features</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-green-200">
+                            <div class="flex items-center">
+                                <i class="fas fa-chart-line mr-2 text-green-400"></i>
+                                <span>EMA 20/50 + Bollinger Bands</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-target mr-2 text-green-400"></i>
+                                <span>Configurable Leverage (5x-100x)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-coins mr-2 text-green-400"></i>
+                                <span>24/7 Crypto Trading</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-clock mr-2 text-green-400"></i>
+                                <span>Manual Pair Selection</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signals Section -->
+        <div id="signals-section" class="section hidden">
+            <div class="trading-card bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700 mb-6">
+                <h2 class="text-2xl font-bold text-white mb-4">Strategy Signals</h2>
+                
+                <!-- Strategy Status Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-white font-semibold">ORB Strategy</h4>
+                            <span id="orb-status" class="text-yellow-400 text-sm">Waiting...</span>
+                        </div>
+                        <div class="text-xs text-gray-400">
+                            <p>Opening Range Breakout detection</p>
+                            <p id="orb-last-signal">Last: Never</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-white font-semibold">Fractal Strategy</h4>
+                            <span id="fractal-status" class="text-yellow-400 text-sm">Waiting...</span>
+                        </div>
+                        <div class="text-xs text-gray-400">
+                            <p>Bill Williams Fractals analysis</p>
+                            <p id="fractal-last-signal">Last: Never</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-white font-semibold">SMC Strategy</h4>
+                            <span id="smc-status" class="text-yellow-400 text-sm">Waiting...</span>
+                        </div>
+                        <div class="text-xs text-gray-400">
+                            <p>Smart Money Concepts</p>
+                            <p id="smc-last-signal">Last: Never</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-white font-semibold">EMA+BB Strategy</h4>
+                            <span id="ema-bb-status" class="text-yellow-400 text-sm">Waiting...</span>
+                        </div>
+                        <div class="text-xs text-gray-400">
+                            <p>EMA 20/50 + Bollinger Bands</p>
+                            <p id="ema-bb-last-signal">Last: Never</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Last Signal Display -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-white mb-4">Latest Signal</h3>
+                    <div id="last-signal-content" class="bg-gray-700 rounded-lg p-6">
+                        <p class="text-gray-400 text-center">No signals yet</p>
+                    </div>
+                </div>
+
+                <!-- Manual Trading Section -->
+                <div class="border-t border-gray-700 pt-6">
+                    <h3 class="text-xl font-bold text-white mb-4">Manual Trading</h3>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button onclick="executeManualTrade('buy')" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition touch-btn interactive">
+                            <i class="fas fa-arrow-up mr-2"></i>Force Buy
+                        </button>
+                        <button onclick="executeManualTrade('sell')" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-lg transition touch-btn interactive">
+                            <i class="fas fa-arrow-down mr-2"></i>Force Sell
+                        </button>
+                    </div>
+                    <p class="text-gray-400 text-sm mt-2 text-center">Manual trades bypass strategy filters and enhanced risk controls</p>
+                </div>
+            </div>
+
+            <!-- Momentum Analysis Section -->
+            <div class="trading-card bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
+                <h2 class="text-2xl font-bold text-white mb-4">Momentum Analysis</h2>
+                <div id="momentum-analysis-content" class="space-y-4">
+                    <p class="text-gray-400 text-center">Momentum analysis will appear here when bot is running</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Positions Section -->
+        <div id="positions-section" class="section hidden">
+            <div class="trading-card bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-white">Open Positions</h2>
+                    <button onclick="closeAllPositions()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition touch-btn interactive">
+                        <i class="fas fa-times mr-2"></i>Close All
+                    </button>
+                </div>
+                
+                <div id="positions-list" class="space-y-4">
+                    <div class="text-center py-8">
+                        <p class="text-gray-400">No open positions</p>
+                        <p class="text-gray-500 text-sm mt-2">Open positions will appear here</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Position Details Modal -->
+            <div id="position-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <div class="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 id="modal-position-title" class="text-xl font-bold text-white"></h3>
+                            <button onclick="closePositionModal()" class="text-gray-400 hover:text-white">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="modal-position-content" class="space-y-4">
+                            <!-- Position details will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Section -->
+        <div id="analytics-section" class="section hidden">
+            <div class="trading-card bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700 mb-6">
+                <h2 class="text-2xl font-bold text-white mb-4">Performance Analytics</h2>
+                
+                <!-- Charts Container -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-white mb-3">Equity Curve</h3>
+                        <div id="equity-chart" class="chart-container bg-gray-700 rounded-lg p-4"></div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-semibold text-white mb-3">Win Rate by Strategy</h3>
+                        <div id="strategy-chart" class="chart-container bg-gray-700 rounded-lg p-4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="trading-card bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h4 class="text-gray-400 text-sm mb-2">Total Trades</h4>
+                    <p id="analytics-total-trades" class="text-3xl font-bold text-white">0</p>
+                </div>
+                
+                <div class="trading-card bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h4 class="text-gray-400 text-sm mb-2">Win Rate</h4>
+                    <p id="analytics-winrate" class="text-3xl font-bold profit-positive">0%</p>
+                </div>
+                
+                <div class="trading-card bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h4 class="text-gray-400 text-sm mb-2">Profit Factor</h4>
+                    <p id="analytics-profit-factor" class="text-3xl font-bold text-white">0.0</p>
+                </div>
+                
+                <div class="trading-card bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h4 class="text-gray-400 text-sm mb-2">Max Drawdown</h4>
+                    <p id="analytics-max-dd" class="text-3xl font-bold profit-negative">0%</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Section -->
+        <div id="logs-section" class="section hidden">
+            <div class="trading-card bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700 mb-6">
+                <h2 class="text-2xl font-bold text-white mb-4">Trade Statistics</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <p class="text-gray-400 text-sm mb-1">Total Trades</p>
+                        <p id="stat-total" class="text-2xl font-bold text-white">0</p>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <p class="text-gray-400 text-sm mb-1">Win Rate</p>
+                        <p id="stat-winrate" class="text-2xl font-bold profit-positive">0%</p>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <p class="text-gray-400 text-sm mb-1">Total Profit</p>
+                        <p id="stat-profit" class="text-2xl font-bold text-white">$0.00</p>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-4">
+                        <p class="text-gray-400 text-sm mb-1">Avg R:R</p>
+                        <p id="stat-rr" class="text-2xl font-bold text-white">0.0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="trading-card bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
+                <h2 class="text-2xl font-bold text-white mb-4">Recent Trades</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="border-b border-gray-700">
+                            <tr>
+                                <th class="pb-3 text-gray-400 font-semibold">Time</th>
+                                <th class="pb-3 text-gray-400 font-semibold">Symbol</th>
+                                <th class="pb-3 text-gray-400 font-semibold">Strategy</th>
+                                <th class="pb-3 text-gray-400 font-semibold">Type</th>
+                                <th class="pb-3 text-gray-400 font-semibold">Entry</th>
+                                <th class="pb-3 text-gray-400 font-semibold">SL</th>
+                                <th class="pb-3 text-gray-400 font-semibold">TP</th>
+                                <th class="pb-3 text-gray-400 font-semibold">Status</th>
+                                <th class="pb-3 text-gray-400 font-semibold">Profit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trades-table-body">
+                            <tr>
+                                <td colspan="9" class="py-8 text-center text-gray-400">No trades yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings-section" class="section hidden">
+            <div class="trading-card bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
+                <h2 class="text-2xl font-bold text-white mb-6">Bot Configuration</h2>
+                
+                <div class="space-y-6">
+                    <!-- Risk Management -->
+                    <div class="border-b border-gray-700 pb-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Risk Management</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Max Risk Per Trade (%)</label>
+                                <input type="number" id="setting-risk" min="0.1" max="5" step="0.1" value="1.0" class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 form-control">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Max Open Positions</label>
+                                <input type="number" id="setting-positions" min="1" max="10" value="3" class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Features -->
+                    <div class="border-b border-gray-700 pb-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Enhanced Features</h3>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Auto-Close Ratio</label>
+                                    <select id="setting-auto-close-ratio" class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 form-control">
+                                        <option value="2.0">1:2 (Conservative)</option>
+                                        <option value="3.0" selected>1:3 (Balanced)</option>
+                                        <option value="4.0">1:4 (Aggressive)</option>
+                                        <option value="5.0">1:5 (Very Aggressive)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Trailing Start (Minutes)</label>
+                                    <input type="number" id="setting-trailing-minutes" min="5" max="60" step="5" value="10" class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 form-control">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Trailing Tightness</label>
+                                <input type="range" id="setting-trailing-tightness" min="0.1" max="1.0" step="0.1" value="0.3" class="w-full">
+                                <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                    <span>Loose</span>
+                                    <span id="trailing-tightness-value">0.3</span>
+                                    <span>Tight</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Strategies -->
+                    <div class="border-b border-gray-700 pb-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Enabled Strategies</h3>
+                        <div class="space-y-3">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="strategy-orb" checked class="mr-3 h-5 w-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                                <div>
+                                    <span class="text-white font-medium">ORB (Opening Range Breakout)</span>
+                                    <p class="text-gray-400 text-sm">Breakout detection with momentum confirmation</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="strategy-fractal" checked class="mr-3 h-5 w-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                                <div>
+                                    <span class="text-white font-medium">Bill Williams Fractals</span>
+                                    <p class="text-gray-400 text-sm">Fractal patterns with higher timeframe analysis</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="strategy-smc" checked class="mr-3 h-5 w-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                                <div>
+                                    <span class="text-white font-medium">Smart Money Concepts</span>
+                                    <p class="text-gray-400 text-sm">Order blocks, liquidity sweeps, and institutional levels</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="strategy-ema-bb" checked class="mr-3 h-5 w-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                                <div>
+                                    <span class="text-white font-medium">EMA + Bollinger Bands</span>
+                                    <p class="text-gray-400 text-sm">EMA 20/50 crossover with Bollinger Band signals</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Momentum Analysis -->
+                    <div class="pb-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Momentum Analysis</h3>
+                        <div class="space-y-3">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="momentum-analysis" checked class="mr-3 h-5 w-5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                                <div>
+                                    <span class="text-white font-medium">Enable Higher Timeframe Analysis</span>
+                                    <p class="text-gray-400 text-sm">Analyze 4H and Daily timeframes for trend strength</p>
+                                </div>
+                            </label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Confidence Threshold</label>
+                                    <input type="range" id="setting-momentum-confidence" min="0.3" max="1.0" step="0.1" value="0.7" class="w-full">
+                                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                        <span>Low</span>
+                                        <span id="momentum-confidence-value">0.7</span>
+                                        <span>High</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Save Button -->
+                    <div>
+                        <button onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition touch-btn interactive">
+                            <i class="fas fa-save mr-2"></i>Save Configuration
+                        </button>
+                        <button onclick="resetSettings()" class="ml-4 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg transition touch-btn interactive">
+                            <i class="fas fa-undo mr-2"></i>Reset to Defaults
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav bg-gray-800 border-t border-gray-700 mobile-only">
+        <div class="flex justify-around py-2">
+            <button onclick="showSection('dashboard')" class="nav-btn touch-btn flex flex-col items-center py-2 px-4">
+                <i class="fas fa-chart-line text-gray-400 mb-1"></i>
+                <span class="text-xs text-gray-400">Dashboard</span>
+            </button>
+            <button onclick="showSection('signals')" class="nav-btn touch-btn flex flex-col items-center py-2 px-4">
+                <i class="fas fa-signal text-gray-400 mb-1"></i>
+                <span class="text-xs text-gray-400">Signals</span>
+            </button>
+            <button onclick="showSection('positions')" class="nav-btn touch-btn flex flex-col items-center py-2 px-4">
+                <i class="fas fa-list text-gray-400 mb-1"></i>
+                <span class="text-xs text-gray-400">Positions</span>
+            </button>
+            <button onclick="showSection('connect')" class="nav-btn touch-btn flex flex-col items-center py-2 px-4">
+                <i class="fas fa-link text-gray-400 mb-1"></i>
+                <span class="text-xs text-gray-400">Connect</span>
+            </button>
+            <button onclick="showSection('settings')" class="nav-btn touch-btn flex flex-col items-center py-2 px-4">
+                <i class="fas fa-cog text-gray-400 mb-1"></i>
+                <span class="text-xs text-gray-400">Settings</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 flex flex-col items-center">
+            <div class="loading-spinner w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mb-3"></div>
+            <p class="text-white text-sm">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Enhanced Notifications -->
+    <div id="notification-container" class="fixed top-4 right-4 z-50 space-y-2">
+        <!-- Notifications will be added here dynamically -->
+    </div>
+
+    <script src="assets/script.js"></script>
+
+</body>
+</html>

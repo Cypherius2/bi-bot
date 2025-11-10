@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Orbitron', monospace;
+  background: #0a0a0a;
+  color: #ffffff;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+/* Cyberpunk UI Components */
+.cyber-card {
+  @apply bg-gray-900 border border-cyber-primary rounded-lg p-6 backdrop-blur-sm;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+}
+
+.cyber-button {
+  @apply bg-transparent border-2 border-cyber-primary text-cyber-primary px-6 py-3 rounded;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.cyber-button:hover {
+  @apply bg-cyber-primary text-black;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+}
+
+.cyber-input {
+  @apply bg-gray-800 border border-gray-600 text-white px-4 py-2 rounded;
+  transition: border-color 0.3s ease;
+}
+
+.cyber-input:focus {
+  @apply border-cyber-primary outline-none;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+/* Workflow Status Indicators */
+.status-running {
+  @apply bg-green-500;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+}
+
+.status-stopped {
+  @apply bg-red-500;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+.status-pending {
+  @apply bg-yellow-500;
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.5);
+}
+
+/* Animations */
+@keyframes scan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.scan-line {
+  animation: scan 2s linear infinite;
+}
+
+/* Loading spinner */
+.cyber-spinner {
+  @apply inline-block w-6 h-6 border-2 border-cyber-primary border-t-transparent rounded-full;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Grid layout */
+.workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .workflow-grid {
+    grid-template-columns: 1fr;
+  }
+}

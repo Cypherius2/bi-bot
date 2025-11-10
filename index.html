@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Binance Futures Bot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <link rel="stylesheet" href="styles/cyberpunk.css">
+    <!-- Chart.js for price charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h2>Initializing Advanced Trading Bot...</h2>
+            <p>Connecting to Binance Futures API</p>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" class="app" style="display: none;">
+        <div class="min-h-screen" style="padding: 24px;">
+            <div class="max-w-7xl mx-auto">
+                <!-- Header -->
+                <div class="mb-8">
+                    <h1 class="text-4xl font-bold mb-2 neon-text">
+                        Advanced Binance Futures Bot
+                    </h1>
+                    <p class="text-gray-400 cyber-terminal">Multi-Strategy Algorithmic Trading System</p>
+                </div>
+
+                <!-- Connection Status Indicator -->
+                <div class="mb-6">
+                    <div class="connection-status disconnected" id="connection-status">
+                        <div class="connection-indicator">
+                            <div class="status-dot"></div>
+                            <span class="status-text" id="connection-text">Connecting to Binance...</span>
+                        </div>
+                        <div class="connection-details" id="connection-details">
+                            <span id="last-update">Last update: Never</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Professional Stats Dashboard -->
+                <div class="stats-grid">
+                    <div class="stat-card cyber-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">💰</div>
+                        </div>
+                        <div class="stat-label">Account Balance</div>
+                        <div class="stat-value" id="account-balance">$0.00</div>
+                        <div class="stat-change positive">+0.0%</div>
+                    </div>
+
+                    <div class="stat-card cyber-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">📈</div>
+                        </div>
+                        <div class="stat-label">Total P&L</div>
+                        <div class="stat-value" id="total-pnl">$0.00</div>
+                        <div class="stat-change positive" id="pnl-change">+0.0%</div>
+                    </div>
+
+                    <div class="stat-card cyber-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">🎯</div>
+                        </div>
+                        <div class="stat-label">Win Rate</div>
+                        <div class="stat-value" id="win-rate">0%</div>
+                        <div class="stat-change" id="win-rate-change">0 trades</div>
+                    </div>
+
+                    <div class="stat-card cyber-card">
+                        <div class="stat-header">
+                            <div class="stat-icon">⚡</div>
+                        </div>
+                        <div class="stat-label">Status</div>
+                        <div class="stat-value capitalize neon-text" id="bot-status">idle</div>
+                        <div class="stat-change" id="bot-mode">Live Trading</div>
+                    </div>
+                </div>
+
+                <!-- Professional Configuration Panel -->
+                <div class="card cyber-card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title neon-text">⚙️ Configuration</h2>
+                            <p class="card-subtitle">Configure your trading parameters and strategy</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Symbol (Select)</label>
+                            <select id="symbol-select" class="form-select cyber-input">
+                                <option value="BTCUSDT">BTC/USDT</option>
+                                <option value="ETHUSDT">ETH/USDT</option>
+                                <option value="BNBUSDT">BNB/USDT</option>
+                                <option value="SOLUSDT">SOL/USDT</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Or Add Custom</label>
+                            <div class="input-group">
+                                <input type="text" id="custom-symbol" class="form-input cyber-input" placeholder="e.g., ADAUSDT" maxlength="10" style="text-transform: uppercase;">
+                                <button id="add-symbol-btn" class="btn btn-icon btn-secondary cyber-btn" title="Add Symbol">
+                                    ➕
+                                </button>
+                                <button id="fetch-chart-btn" class="btn btn-icon btn-primary cyber-btn" title="Fetch Chart">
+                                    📊
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Leverage</label>
+                            <select id="leverage-select" class="form-select cyber-input">
+                                <option value="5">5x</option>
+                                <option value="10" selected>10x</option>
+                                <option value="20">20x</option>
+                                <option value="50">50x</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Risk %</label>
+                            <input type="number" id="risk-percent" class="form-input cyber-input" value="1.0" step="0.1" min="0.1" max="5">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Timeframe</label>
+                            <select id="timeframe-select" class="form-select cyber-input">
+                                <option value="1m">1m</option>
+                                <option value="5m" selected>5m</option>
+                                <option value="15m">15m</option>
+                                <option value="1h">1h</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Strategy Mode</label>
+                            <select id="strategy-mode" class="form-select cyber-input">
+                                <option value="advanced" selected>Advanced</option>
+                                <option value="conservative">Conservative</option>
+                                <option value="aggressive">Aggressive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="control-buttons">
+                            <button id="start-bot" class="btn btn-success btn-lg cyber-btn">
+                                <span>▶️</span>
+                                Start Bot
+                            </button>
+
+                            <button id="stop-bot" class="btn btn-danger btn-lg cyber-btn" disabled>
+                                <span>⏹️</span>
+                                Stop Bot
+                            </button>
+
+                            <button id="reset-bot" class="btn btn-secondary cyber-btn">
+                                <span>🔄</span>
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-grid">
+                    <!-- Professional Price Chart -->
+                    <div class="card cyber-card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title neon-text" id="chart-title">Price Action - BTC/USDT</h3>
+                                <p class="card-subtitle cyber-terminal">Real-time market data and analysis</p>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="chart-container" style="height: 300px;">
+                                <canvas id="price-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Professional Strategy Performance -->
+                    <div class="card cyber-card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title neon-text">Strategy Performance</h3>
+                                <p class="card-subtitle cyber-terminal">Live trading strategy metrics</p>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="space-y-3" id="strategy-performance">
+                                <div class="strategy-item">
+                                    <div>
+                                        <p class="strategy-name">EMA Crossover with RSI</p>
+                                        <p class="strategy-metric" id="ema-trades">0 trades</p>
+                                    </div>
+                                    <div class="strategy-metrics">
+                                        <p class="strategy-winrate" id="ema-winrate">68%</p>
+                                        <p class="strategy-profit" id="ema-profit">+$1,250</p>
+                                    </div>
+                                </div>
+                                <div class="strategy-item">
+                                    <div>
+                                        <p class="strategy-name">Volume Profile + Order Flow</p>
+                                        <p class="strategy-metric" id="volume-trades">0 trades</p>
+                                    </div>
+                                    <div class="strategy-metrics">
+                                        <p class="strategy-winrate" id="volume-winrate">72%</p>
+                                        <p class="strategy-profit" id="volume-profit">+$1,680</p>
+                                    </div>
+                                </div>
+                                <div class="strategy-item">
+                                    <div>
+                                        <p class="strategy-name">Market Structure Break</p>
+                                        <p class="strategy-metric" id="structure-trades">0 trades</p>
+                                    </div>
+                                    <div class="strategy-metrics">
+                                        <p class="strategy-winrate" id="structure-winrate">65%</p>
+                                        <p class="strategy-profit" id="structure-profit">+$980</p>
+                                    </div>
+                                </div>
+                                <div class="strategy-item">
+                                    <div>
+                                        <p class="strategy-name">Liquidity Sweep + FVG</p>
+                                        <p class="strategy-metric" id="fvg-trades">0 trades</p>
+                                    </div>
+                                    <div class="strategy-metrics">
+                                        <p class="strategy-winrate" id="fvg-winrate">75%</p>
+                                        <p class="strategy-profit" id="fvg-profit">+$1,820</p>
+                                    </div>
+                                </div>
+                                <div class="strategy-item">
+                                    <div>
+                                        <p class="strategy-name">Delta Divergence</p>
+                                        <p class="strategy-metric" id="delta-trades">0 trades</p>
+                                    </div>
+                                    <div class="strategy-metrics">
+                                        <p class="strategy-winrate" id="delta-winrate">70%</p>
+                                        <p class="strategy-profit" id="delta-profit">+$1,340</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div id="notifications" class="fixed top-4 right-4 z-50 max-w-sm"></div>
+
+                <div class="content-grid-3">
+                    <!-- Professional Open Positions -->
+                    <div class="card cyber-card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title neon-text">Open Positions</h3>
+                                <p class="card-subtitle cyber-terminal">
+                                    <span id="positions-count">0</span> active positions
+                                </p>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="positions-list" id="positions-list">
+                                <div class="empty-state cyber-terminal">
+                                    <p>No open positions</p>
+                                    <small>Positions will appear here when trading begins</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Professional Recent Signals -->
+                    <div class="card cyber-card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title neon-text">Recent Signals</h3>
+                                <p class="card-subtitle cyber-terminal">Latest trading opportunities</p>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="signals-list" id="signals-list">
+                                <div class="empty-state cyber-terminal">
+                                    <p>Waiting for signals...</p>
+                                    <small>Trading signals will appear here</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Professional Trade History -->
+                    <div class="card cyber-card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title neon-text">Trade History</h3>
+                                <p class="card-subtitle cyber-terminal">Completed transactions</p>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="trades-list" id="trades-list">
+                                <div class="empty-state cyber-terminal">
+                                    <p>No completed trades</p>
+                                    <small>Completed trades will appear here</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/websocket.js"></script>
+    <script src="js/strategies.js"></script>
+    <script src="js/trading.js"></script>
+    <script src="js/chart.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

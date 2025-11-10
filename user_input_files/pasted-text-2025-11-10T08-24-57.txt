@@ -1,0 +1,329 @@
+# MNV Trading Bot - Professional Forex Trading System
+
+A production-ready algorithmic trading bot that combines **Opening Range Breakout (ORB)**, **Bill Williams Fractals**, and **Smart Money Concepts (SMC)** for scalp trading on forex pairs and indices.
+
+## Features
+
+- **Multi-Strategy Trading**: Combines three proven trading strategies
+  - ORB (Opening Range Breakout) for momentum trading
+  - Bill Williams Fractals for trend reversal detection
+  - Smart Money Concepts for institutional-level order flow analysis
+  
+- **Multi-Timeframe Analysis**: 1-minute entries with 5m/15m trend confirmation
+
+- **MetaTrader 5 Integration**: Direct connection to MT5 for real-time data and order execution
+
+- **Professional Risk Management**:
+  - 1% maximum risk per trade
+  - Dynamic lot sizing based on account balance
+  - Automatic stop loss and take profit placement
+  - Maximum drawdown protection
+
+- **Real-Time Dashboard**: Modern web interface for monitoring and control
+
+- **Paper Trading Mode**: Test strategies safely before going live
+
+- **Comprehensive Logging**: JSON and CSV trade logs for analysis
+
+## Supported Instruments
+
+- **XAU/USD** (Gold)
+- **USD/JPY** (Japanese Yen)
+- **JP225 Cash** (Nikkei 225 Index)
+
+## System Requirements
+
+- Python 3.11 or higher
+- MetaTrader 5 platform installed (for Windows)
+- MetaTrader 5 broker account (demo or live)
+- Minimum 4GB RAM
+- Stable internet connection
+
+## Installation
+
+### 1. Clone or Download the Repository
+
+```bash
+cd mnv-trading-bot
+```
+
+### 2. Install Python Dependencies
+
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+### 3. Configure Environment Variables
+
+Create a `.env` file in the `backend` directory:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your MT5 credentials:
+
+```env
+MT5_SERVER=your-broker-server
+MT5_LOGIN=your-account-number
+MT5_PASSWORD=your-account-password
+TRADING_MODE=demo
+MAX_RISK_PERCENT=1.0
+MAX_POSITIONS=3
+```
+
+**IMPORTANT**: Get your MT5 credentials from your broker. Never share these credentials.
+
+### 4. Configure Strategy Parameters
+
+Edit `config.json` to customize strategy settings:
+
+```json
+{
+  "orb_minutes": 15,
+  "orb_threshold": 0.5,
+  "max_risk_percent": 1.0,
+  "max_positions": 3
+}
+```
+
+## Usage
+
+### Starting the Backend Server
+
+```bash
+cd backend
+python main.py
+```
+
+The API server will start at `http://localhost:8000`
+
+### Opening the Dashboard
+
+Open `frontend/index.html` in your web browser, or serve it using a local server:
+
+```bash
+cd frontend
+python -m http.server 8080
+```
+
+Then navigate to `http://localhost:8080`
+
+### Starting the Bot
+
+1. Open the dashboard in your browser
+2. Select your trading symbol (XAU/USD, USD/JPY, or JP225Cash)
+3. Choose trading mode (Demo or Live)
+4. Click "Start Bot"
+
+**CRITICAL WARNING**: Always start with **Demo** mode to test the system before switching to Live trading!
+
+## Trading Strategies Explained
+
+### 1. Opening Range Breakout (ORB)
+
+- Calculates opening range from first 15 minutes of trading
+- Identifies breakout opportunities above/below the range
+- Confirms breakouts using ATR (Average True Range) threshold
+- 2:1 reward-to-risk ratio
+
+### 2. Bill Williams Fractals
+
+- Detects swing highs and lows (5-bar pattern)
+- Identifies trend reversals and continuations
+- Confirmed with higher timeframe analysis
+- 2.5:1 reward-to-risk ratio
+
+### 3. Smart Money Concepts (SMC)
+
+- Break of Structure (BOS) detection
+- Liquidity sweep identification
+- Order block recognition (engulfing patterns)
+- Fair Value Gap (FVG) analysis
+- 3:1 reward-to-risk ratio
+
+### Multi-Strategy Integration
+
+The bot evaluates all three strategies simultaneously and executes the highest-confidence signal with multi-timeframe confirmation.
+
+## Risk Management
+
+### Position Sizing
+
+Position size is calculated using the formula:
+
+```
+lot_size = (account_balance * risk_percent) / (stop_loss_distance * contract_size * point_value)
+```
+
+### Safety Features
+
+- **Maximum 1% risk per trade** (configurable)
+- **Maximum 3 concurrent positions** (configurable)
+- **Daily loss limit**: 3% of account balance
+- **Maximum drawdown**: 10% of account balance
+- **Minimum margin level**: 150%
+
+### Paper Trading Mode
+
+The bot defaults to **paper trading mode** where:
+- All signals are logged but no real trades are executed
+- You can test strategies without risking capital
+- Perfect for optimization and backtesting
+
+## API Endpoints
+
+### Bot Control
+
+- `POST /start-bot` - Start the trading bot
+- `POST /stop-bot` - Stop the trading bot
+- `GET /status` - Get bot status and account info
+
+### Trading Operations
+
+- `POST /manual-trade` - Execute manual trade
+- `GET /positions` - Get open positions
+- `POST /close-position/{ticket}` - Close specific position
+
+### Data Access
+
+- `GET /logs` - Get trade history and statistics
+- `GET /price/{symbol}` - Get current price for symbol
+- `POST /config` - Update bot configuration
+
+## Logging System
+
+### Trade Logs
+
+Located in `logs/` directory:
+
+- `trades.json` - Complete trade history in JSON format
+- `trades.csv` - Trade history in CSV format
+- `errors.log` - Error messages and exceptions
+- `events.log` - System events and information
+
+### Trade Statistics
+
+The dashboard displays:
+- Total number of trades
+- Win rate percentage
+- Total profit/loss
+- Average risk-reward ratio
+- Best/worst trades
+
+## Deployment
+
+### Backend Deployment (Render/Railway)
+
+1. Create account on Render.com or Railway.app
+2. Connect your repository
+3. Set environment variables (MT5 credentials)
+4. Deploy as Python web service
+5. Note the deployment URL
+
+### Frontend Deployment (Netlify)
+
+1. Create account on Netlify.com
+2. Drag and drop the `frontend` folder
+3. Update `API_BASE_URL` in `script.js` to your backend URL
+4. Publish the site
+
+## Troubleshooting
+
+### MT5 Connection Issues
+
+**Error**: "MT5 initialize() failed"
+- Ensure MetaTrader 5 is installed on your system
+- Check that MT5 is running (doesn't need to be open)
+- Verify server name is correct (check MT5 account settings)
+
+**Error**: "MT5 login failed"
+- Double-check login credentials in `.env`
+- Ensure account is active with your broker
+- Try logging in manually through MT5 first
+
+### Symbol Not Found
+
+**Error**: "Symbol XAUUSD not found"
+- Symbol names vary by broker (try "XAUUSD", "GOLD", "XAU/USD")
+- Check symbol availability in MT5 Market Watch
+- Update symbol in dashboard dropdown
+
+### No Data Received
+
+**Error**: "No data received for symbol"
+- Ensure MT5 has market data for the symbol
+- Check that market is open (forex trades 24/5)
+- Verify internet connection is stable
+
+### Position Execution Failed
+
+**Error**: "Failed to execute trade"
+- Check account has sufficient free margin
+- Verify lot size is within broker limits
+- Ensure market is open for trading
+- Check for error messages in `logs/errors.log`
+
+## Safety Warnings
+
+### Critical Safety Guidelines
+
+1. **NEVER start with live trading** - Always test in demo mode first
+2. **NEVER risk more than 1% per trade** - Protect your capital
+3. **NEVER trade without proper testing** - Verify all strategies work correctly
+4. **NEVER leave bot unmonitored** - Check regularly for issues
+5. **NEVER ignore error messages** - Address problems immediately
+
+### Live Trading Checklist
+
+Before switching to live trading:
+
+- [ ] Tested thoroughly in demo mode for at least 2 weeks
+- [ ] Reviewed all trade logs and statistics
+- [ ] Verified all strategies perform as expected
+- [ ] Confirmed risk management settings are appropriate
+- [ ] Ensured stable internet connection
+- [ ] Set up proper monitoring and alerts
+- [ ] Understood all risks involved
+- [ ] Only using capital you can afford to lose
+
+## Disclaimer
+
+**IMPORTANT**: Trading forex and CFDs involves significant risk of loss. This bot is provided for educational and research purposes only. 
+
+- Past performance does not guarantee future results
+- You may lose some or all of your invested capital
+- Only trade with money you can afford to lose
+- The authors assume no liability for any losses incurred
+- Always do your own research and testing
+- Consider seeking advice from a licensed financial advisor
+
+## Support
+
+For issues, questions, or contributions:
+
+1. Check the troubleshooting section above
+2. Review log files in `logs/` directory
+3. Test with demo account first
+4. Document the issue with screenshots and logs
+
+## License
+
+This project is provided as-is for educational purposes. Use at your own risk.
+
+## Version History
+
+- **v1.0.0** (2025-11-05)
+  - Initial release
+  - ORB, Fractals, and SMC strategies implemented
+  - MT5 integration complete
+  - Web dashboard functional
+  - Paper trading mode active
+  - Comprehensive logging system
+
+---
+
+**Built by MiniMax Agent** - Professional Trading Bot Development
+
+**Trade Safely. Trade Smart. Trade Profitably.**
